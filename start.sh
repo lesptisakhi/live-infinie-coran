@@ -4,7 +4,7 @@
 apt-get update && apt-get install -y ffmpeg
 
 # Variables
-INPUT="video.mp4"
+INPUT="https://github.com/lesptisakhi/live-infinie-coran/releases/download/video/video.mp4"
 YOUTUBE_URL="$YOUTUBE_URL"
 
 # Boucle infinie pour relancer le live automatiquement
