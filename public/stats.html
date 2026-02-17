@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Stats - OBS Dark</title>
+  <link rel="stylesheet" href="/public/stats.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Live Control Panel</h1>
+      <div class="status-pill" id="status-pill">OFFLINE</div>
+    </header>
+
+    <section class="top-grid">
+      <div class="card">
+        <h2>Live</h2>
+        <p><span class="label">Statut :</span> <span id="status-text">OFFLINE</span></p>
+        <p><span class="label">Bitrate :</span> <span id="bitrate">N/A</span> kbps</p>
+        <p><span class="label">Uptime :</span> <span id="uptime">0 s</span></p>
+        <p><span class="label">Redémarrages :</span> <span id="restarts">0</span></p>
+      </div>
+
+      <div class="card">
+        <h2>Serveur</h2>
+        <p><span class="label">RAM :</span> <span id="ram">N/A</span> MB</p>
+        <p><span class="label">CPU (1m load) :</span> <span id="cpu">N/A</span></p>
+      </div>
+
+      <div class="card actions">
+        <h2>Actions</h2>
+        <button id="btn-restart">Restart Live</button>
+        <div class="change-video">
+          <input type="text" id="video-url" placeholder="Nouvelle URL vidéo (mp4, stream...)">
+          <button id="btn-change-video">Change Video</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="middle-grid">
+      <div class="card graph-card">
+        <h2>Bitrate (kbps)</h2>
+        <canvas id="bitrate-chart"></canvas>
+      </div>
+    </section>
+
+    <section class="bottom-grid">
+      <div class="card logs-card">
+        <h2>Derniers logs FFmpeg</h2>
+        <pre id="logs"></pre>
+      </div>
+    </section>
+  </div>
+
+  <script src="/public/stats.js"></script>
+</body>
+</html>
