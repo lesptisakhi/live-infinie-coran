@@ -1,16 +1,13 @@
 #!/bin/bash
 
-# Installer FFmpeg
-apt-get update && apt-get install -y ffmpeg
-
 # Lancer le serveur web en arrière-plan
 node server.js &
 
 # Lien direct vers ta vidéo GitHub Release
 INPUT="https://github.com/lesptisakhi/live-infinie-coran/releases/download/video/video.mp4"
 
-# URL YouTube RTMP
-YOUTUBE_URL="rtmp://live.restream.io/live/re_11259084_event33c6f39ecb274ef88d19aa61e1558c09"
+# URL YouTube / Restream / Twitch
+YOUTUBE_URL="$YOUTUBE_URL"
 
 # Boucle infinie pour relancer le live
 while true
