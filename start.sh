@@ -10,7 +10,7 @@ node server.js &
 INPUT="https://github.com/lesptisakhi/live-infinie-coran/releases/download/video/video.mp4"
 
 # URL YouTube RTMP
-YOUTUBE_URL="$YOUTUBE_URL"
+YOUTUBE_URL="rtmp://rtmp.livepeer.com/live/TEST"
 
 # Boucle infinie pour relancer le live
 while true
