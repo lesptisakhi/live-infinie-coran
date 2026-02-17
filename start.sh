@@ -5,7 +5,7 @@
 ###############################################
 
 # URL de la vidéo (GitHub Releases)
-VIDEO_URL="https://github.com/lesptisakhi/liveytb/releases/download/video/video.mp4"
+VIDEO_URL="https://github.com/lesptisakhi/live-infinie-coran/releases/download/video/video.mp4"
 VIDEO_FILE="video.mp4"
 
 # RTMP de test (Livepeer)
