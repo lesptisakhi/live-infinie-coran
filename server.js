@@ -1,7 +1,6 @@
 const express = require('express');
 const os = require('os');
 const fs = require('fs');
-const { spawn } = require('child_process');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -13,12 +12,15 @@ const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 10000;
 const PASSWORD = 'fURIOUS35.2008@#';
 
-let ffmpegProcess = null;
+// État du live
 let lastBitrate = null;
 let isLive = false;
 let liveStartTime = null;
 let restartCount = 0;
 let lastLogs = [];
+
+// Pour lire ffmpeg.log en continu
+let lastLogSize = 0;
 
 // ---------- Middleware protection ----------
 function authMiddleware(req, res, next) {
@@ -59,7 +61,8 @@ app.get('/api/status', authMiddleware, (req, res) => {
 
 // ---------- API restart live ----------
 app.post('/api/restart', authMiddleware, (req, res) => {
-  restartLive();
+  restartCount++;
+  broadcast({ type: 'restart', count: restartCount });
   res.json({ ok: true });
 });
 
@@ -69,13 +72,14 @@ app.post('/api/change-video', authMiddleware, (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'Missing url' });
 
-  // On écrit l’URL dans un fichier pour que start.sh puisse la lire si tu veux plus tard
   fs.writeFileSync('video_url.txt', url);
-  restartLive();
+  restartCount++;
+  broadcast({ type: 'restart', count: restartCount });
+
   res.json({ ok: true });
 });
 
-// ---------- WebSocket (logs + stats en temps réel) ----------
+// ---------- WebSocket ----------
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const key = url.searchParams.get('key');
@@ -97,40 +101,52 @@ function broadcast(data) {
   });
 }
 
-// ---------- Gestion FFmpeg (logs + bitrate) ----------
-function attachFfmpegLogging(child) {
-  liveStartTime = Date.now();
-  isLive = true;
+// ---------- Lecture en temps réel de ffmpeg.log ----------
+setInterval(() => {
+  fs.stat('ffmpeg.log', (err, stats) => {
+    if (err || !stats) return;
 
-  child.stderr.on('data', (data) => {
-    const line = data.toString().trim();
-    if (!line) return;
+    if (stats.size > lastLogSize) {
+      const stream = fs.createReadStream('ffmpeg.log', {
+        start: lastLogSize,
+        end: stats.size
+      });
 
-    lastLogs.push(line);
-    if (lastLogs.length > 200) lastLogs.shift();
+      stream.on('data', (chunk) => {
+        const lines = chunk.toString().split('\n');
 
-    // Broadcast logs
-    broadcast({ type: 'log', line });
+        lines.forEach(line => {
+          if (!line.trim()) return;
 
-    // Bitrate (on parse les lignes contenant "bitrate=")
-    const match = line.match(/bitrate=\s*([0-9.]+)kbits\/s/);
-    if (match) {
-      lastBitrate = parseFloat(match[1]);
-      broadcast({ type: 'bitrate', value: lastBitrate });
+          // Ajouter aux logs
+          lastLogs.push(line);
+          if (lastLogs.length > 200) lastLogs.shift();
+
+          // Envoyer au dashboard
+          broadcast({ type: 'log', line });
+
+          // Détection LIVE
+          if (line.includes("frame=") || line.includes("bitrate=")) {
+            if (!isLive) {
+              liveStartTime = Date.now();
+            }
+            isLive = true;
+            broadcast({ type: 'status', live: true });
+          }
+
+          // Extraction du bitrate
+          const match = line.match(/bitrate=\s*([0-9.]+)kbits\/s/);
+          if (match) {
+            lastBitrate = parseFloat(match[1]);
+            broadcast({ type: 'bitrate', value: lastBitrate });
+          }
+        });
+      });
+
+      lastLogSize = stats.size;
     }
   });
-
-  child.on('exit', () => {
-    isLive = false;
-    broadcast({ type: 'status', live: false });
-  });
-}
-
-// ---------- Restart live (appelé par start.sh ou API) ----------
-function restartLive() {
-  restartCount++;
-  broadcast({ type: 'restart', count: restartCount });
-}
+}, 500);
 
 // ---------- Démarrage serveur ----------
 server.listen(PORT, () => {
