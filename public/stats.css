@@ -1,0 +1,144 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at top, #1f2933 0, #020617 55%);
+  color: #e5e7eb;
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.status-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  background: #7f1d1d;
+  color: #fecaca;
+}
+
+.status-pill.live {
+  background: #065f46;
+  color: #bbf7d0;
+}
+
+.top-grid,
+.middle-grid,
+.bottom-grid {
+  display: grid;
+  grid-gap: 16px;
+  margin-bottom: 16px;
+}
+
+.top-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.card {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.card h2 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #e5e7eb;
+}
+
+.card p {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.label {
+  color: #9ca3af;
+}
+
+.actions button {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+}
+
+.actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.5);
+}
+
+.actions button:active {
+  transform: translateY(0);
+  box-shadow: none;
+  opacity: 0.9;
+}
+
+.change-video {
+  display: flex;
+  gap: 6px;
+}
+
+.change-video input {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #4b5563;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
+.change-video button {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.graph-card {
+  height: 220px;
+}
+
+.logs-card {
+  height: 260px;
+}
+
+#logs {
+  height: 100%;
+  overflow-y: auto;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 11px;
+  background: #020617;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #1f2937;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+}
