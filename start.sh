@@ -4,7 +4,7 @@
 node server.js &
 
 # Lien direct vers ta vidéo GitHub Release
-INPUT="https://drive.google.com/uc?export=download&id=1puZmFkf6lC9vnfAoEmx9Nc560imjCaxZ"
+INPUT="https://mega.nz/file/l6UFTQKQ#PUeKYD2dFgbHONUMsXbkIo6OgWa-TOvuQxRFCg7jxg0"
 
 # URL YouTube / Restream / Twitch
 YOUTUBE_URL="$YOUTUBE_URL"
