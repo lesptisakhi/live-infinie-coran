@@ -4,7 +4,7 @@
 node server.js &
 
 # Lien direct vers ta vidéo GitHub Release
-INPUT="https://mega.nz/file/l6UFTQKQ#PUeKYD2dFgbHONUMsXbkIo6OgWa-TOvuQxRFCg7jxg0"
+INPUT="https://github.com/lesptisakhi/live-infinie-coran/releases/download/video/video.mp4"
 
 # URL YouTube / Restream / Twitch
 YOUTUBE_URL="$YOUTUBE_URL"
