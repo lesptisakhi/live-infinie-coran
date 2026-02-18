@@ -4,7 +4,7 @@
 node server.js &
 
 # Lien direct vers ta vidéo GitHub Release
-INPUT="https://piped.video/redirect?video=Vi-B-Zu7LZ4"
+INPUT="https://drive.google.com/uc?export=download&id=1puZmFkf6lC9vnfAoEmx9Nc560imjCaxZ"
 
 # URL YouTube / Restream / Twitch
 YOUTUBE_URL="$YOUTUBE_URL"
