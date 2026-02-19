@@ -37,7 +37,7 @@ do
     ffmpeg -re \
         -loop 1 -i "$IMAGE" \
         -f concat -safe 0 -i "$PLAYLIST" \
-        -c:v libx264 -preset veryfast -tune stillimage -b:v 1500k \
+        -c:v libx264 -preset veryfast -tune stillimage -b:v 3000k \
         -c:a aac -b:a 128k -ar 44100 \
         -pix_fmt yuv420p \
         -g 60 -keyint_min 60 \
