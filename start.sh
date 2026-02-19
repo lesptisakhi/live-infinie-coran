@@ -1,28 +1,23 @@
 #!/bin/bash
 
-# Lancer le serveur web en arrière-plan
 node server.js &
 
-# Lien direct vers ta vidéo GitHub Release
-INPUT="https://github.com/lesptisakhi/live-infinie-coran/releases/download/video/video.mp4"
+INPUT_IMAGE="image.jpg"
+INPUT_AUDIO="audio.mp3"
+OUTPUT="rtmp://live.restream.io/live/re_11259084_event8dfc335bb78146ef8797a0fcacf25388"
 
-# URL YouTube / Restream / Twitch
-YOUTUBE_URL="rtmp://live.restream.io/live/re_11259084_event8dfc335bb78146ef8797a0fcacf25388"
-
-# Boucle infinie pour relancer le live
 while true
 do
-    echo "🚀 Lancement du live YouTube..."
-
-    # On vide le fichier log à chaque redémarrage
     echo "" > ffmpeg.log
 
-    # FFmpeg + pipe vers ffmpeg.log
-    ffmpeg -re -i "$INPUT" \
-        -c:v libx264 -preset veryfast -b:v 4500k \
-        -c:a aac -b:a 128k -ar 44100 \
-        -f flv "$YOUTUBE_URL" 2>&1 | tee -a ffmpeg.log
+    ffmpeg -loop 1 -i "$INPUT_IMAGE" \
+           -stream_loop -1 -i "$INPUT_AUDIO" \
+           -c:v libx264 -preset veryfast -tune stillimage -b:v 1500k \
+           -c:a aac -b:a 128k -ar 44100 \
+           -pix_fmt yuv420p \
+           -g 60 -keyint_min 60 \
+           -f flv "$OUTPUT" 2>&1 | tee -a ffmpeg.log
 
-    echo "❌ Le live s'est arrêté. Redémarrage dans 5 secondes..."
-    sleep 5
+    echo "❌ Flux arrêté, redémarrage..."
+    sleep 3
 done
