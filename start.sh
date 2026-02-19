@@ -28,7 +28,7 @@ do
 done
 
 IMAGE="image.png"
-OUTPUT="rtmp://live.restream.io/live/re_11259084_event8dfc335bb78146ef8797a0fcacf25388"
+OUTPUT="rtmp://a.rtmp.youtube.com/live2/rp4f-a4rp-adz9-hk5d-5fd4"
 
 while true
 do
