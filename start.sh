@@ -1,10 +1,33 @@
 #!/bin/bash
 
-# Lancer le petit serveur Node.js en arrière-plan
 node server.js &
 
+# Dossier temporaire pour stocker les audios
+AUDIO_DIR="/tmp/audio"
+mkdir -p "$AUDIO_DIR"
+
+# Télécharger les 114 fichiers audio depuis la Release
+for i in $(seq -f "%03g" 1 114)
+do
+    URL="https://github.com/lesptisakhi/live-infinie-coran/releases/download/audio/$i.mp3"
+    FILE="$AUDIO_DIR/$i.mp3"
+
+    if [ ! -f "$FILE" ]; then
+        echo "Téléchargement de $URL"
+        curl -L "$URL" -o "$FILE"
+    fi
+done
+
+# Générer playlist locale
+PLAYLIST="/tmp/playlist.txt"
+rm -f "$PLAYLIST"
+
+for i in $(seq -f "%03g" 1 114)
+do
+    echo "file '$AUDIO_DIR/$i.mp3'" >> "$PLAYLIST"
+done
+
 IMAGE="image.png"
-PLAYLIST="playlist.txt"
 OUTPUT="rtmp://live.restream.io/live/re_11259084_event8dfc335bb78146ef8797a0fcacf25388"
 
 while true
