@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Lancer le serveur HTTP en arrière-plan
-node server.js &
-sleep 2
+# node server.js &
+# sleep 2
 
 # Dossier temporaire pour stocker les audios
 AUDIO_DIR="/tmp/audio"
@@ -38,11 +38,10 @@ do
 
     ffmpeg -re \
         -loop 1 -i "$IMAGE" \
-        -vf scale=854:480 \
         -f concat -safe 0 -i "$PLAYLIST" \
+        -vf "scale=854:480,format=yuv420p" \
         -c:v libx264 -preset ultrafast -tune stillimage -b:v 2000k \
         -c:a aac -b:a 128k -ar 44100 \
-        -pix_fmt yuv420p \
         -g 60 -keyint_min 60 \
         -shortest \
         -f flv "$OUTPUT" 2>&1 | tee -a ffmpeg.log
