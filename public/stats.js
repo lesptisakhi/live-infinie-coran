@@ -1,4 +1,4 @@
-// Récupération du mot de passe via prompt si pas dans l’URL
+// --- PASSWORD HANDLING ---
 function getPassword() {
   const url = new URL(window.location.href);
   let key = url.searchParams.get('key');
@@ -16,7 +16,7 @@ if (!PASSWORD) {
   alert('Mot de passe requis.');
 }
 
-// Elements
+// --- ELEMENTS ---
 const statusPill = document.getElementById('status-pill');
 const statusText = document.getElementById('status-text');
 const bitrateEl = document.getElementById('bitrate');
@@ -25,12 +25,17 @@ const restartsEl = document.getElementById('restarts');
 const ramEl = document.getElementById('ram');
 const cpuEl = document.getElementById('cpu');
 const logsEl = document.getElementById('logs');
+const ytStatusEl = document.getElementById('yt-status');
+
+const trackEl = document.getElementById('track');
+const audioPlayer = document.getElementById('player');
 
 const btnRestart = document.getElementById('btn-restart');
+const btnRestartCycle = document.getElementById('btn-restart-cycle');
 const btnChangeVideo = document.getElementById('btn-change-video');
 const videoUrlInput = document.getElementById('video-url');
 
-// Bitrate chart (simple maison)
+// --- BITRATE GRAPH ---
 const canvas = document.getElementById('bitrate-chart');
 const ctx = canvas.getContext('2d');
 let bitrateData = [];
@@ -60,7 +65,7 @@ function drawChart() {
   ctx.stroke();
 }
 
-// WebSocket
+// --- WEBSOCKET LIVE UPDATES ---
 if (PASSWORD) {
   const wsProto = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const wsUrl = `${wsProto}://${window.location.host}/?key=${encodeURIComponent(PASSWORD)}`;
@@ -85,10 +90,14 @@ if (PASSWORD) {
     if (msg.type === 'status') {
       setLiveStatus(msg.live);
     }
+
+    if (msg.type === 'track') {
+      updateTrack(msg.file);
+    }
   };
 }
 
-// Status helper
+// --- STATUS HANDLER ---
 function setLiveStatus(live) {
   if (live) {
     statusPill.classList.add('live');
@@ -101,7 +110,14 @@ function setLiveStatus(live) {
   }
 }
 
-// Poll API status
+// --- TRACK HANDLER ---
+function updateTrack(file) {
+  if (!file) return;
+  trackEl.textContent = `${file}`;
+  audioPlayer.src = `/api/audio?file=${file}&key=${PASSWORD}`;
+}
+
+// --- POLL API STATUS ---
 async function refreshStatus() {
   try {
     const url = new URL('/api/status', window.location.origin);
@@ -111,12 +127,17 @@ async function refreshStatus() {
     const data = await res.json();
 
     setLiveStatus(data.live);
+
     if (data.bitrate != null) bitrateEl.textContent = data.bitrate.toFixed(0);
     uptimeEl.textContent = data.uptime + ' s';
     restartsEl.textContent = data.restartCount;
     ramEl.textContent = data.ramMb;
     cpuEl.textContent = data.cpuLoad.toFixed(2);
+    ytStatusEl.textContent = data.youtubeStatus;
 
+    if (data.currentTrack) updateTrack(data.currentTrack);
+
+    // Initial logs load
     if (logsEl.textContent.trim().length === 0 && data.logs && data.logs.length) {
       logsEl.textContent = data.logs.join('\n') + '\n';
       logsEl.scrollTop = logsEl.scrollHeight;
@@ -129,9 +150,15 @@ async function refreshStatus() {
 setInterval(refreshStatus, 2000);
 refreshStatus();
 
-// Actions
+// --- ACTION BUTTONS ---
 btnRestart.addEventListener('click', async () => {
   const url = new URL('/api/restart', window.location.origin);
+  url.searchParams.set('key', PASSWORD);
+  await fetch(url.toString(), { method: 'POST' });
+});
+
+btnRestartCycle.addEventListener('click', async () => {
+  const url = new URL('/api/restart-cycle', window.location.origin);
   url.searchParams.set('key', PASSWORD);
   await fetch(url.toString(), { method: 'POST' });
 });
