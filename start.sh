@@ -1,6 +1,8 @@
 #!/bin/bash
 
+# Lancer le serveur HTTP en premier
 node server.js &
+sleep 3
 
 # Dossier temporaire pour stocker les audios
 AUDIO_DIR="/tmp/audio"
