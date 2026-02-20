@@ -1,3 +1,4 @@
+/* RESET + BASE */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -17,6 +18,7 @@ body {
   padding: 16px;
 }
 
+/* HEADER */
 .header {
   display: flex;
   justify-content: space-between;
@@ -29,6 +31,7 @@ body {
   font-weight: 600;
 }
 
+/* STATUS PILL */
 .status-pill {
   padding: 6px 14px;
   border-radius: 999px;
@@ -43,6 +46,7 @@ body {
   color: #bbf7d0;
 }
 
+/* GRID LAYOUTS */
 .top-grid,
 .middle-grid,
 .bottom-grid {
@@ -55,6 +59,7 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+/* CARDS */
 .card {
   background: rgba(15, 23, 42, 0.95);
   border-radius: 10px;
@@ -78,6 +83,7 @@ body {
   color: #9ca3af;
 }
 
+/* ACTION BUTTONS */
 .actions button {
   width: 100%;
   padding: 8px;
@@ -102,6 +108,12 @@ body {
   opacity: 0.9;
 }
 
+/* Restart Cycle button (rouge) */
+.actions button#btn-restart-cycle {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+/* CHANGE VIDEO */
 .change-video {
   display: flex;
   gap: 6px;
@@ -122,10 +134,12 @@ body {
   font-size: 13px;
 }
 
+/* GRAPH */
 .graph-card {
   height: 220px;
 }
 
+/* LOGS */
 .logs-card {
   height: 260px;
 }
@@ -141,4 +155,19 @@ body {
   border: 1px solid #1f2937;
   color: #e5e7eb;
   white-space: pre-wrap;
+}
+
+/* AUDIO PLAYER */
+audio {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 6px;
+  outline: none;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .top-grid {
+    grid-template-columns: 1fr;
+  }
 }
