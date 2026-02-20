@@ -1,6 +1,7 @@
 const express = require('express');
 const os = require('os');
 const fs = require('fs');
+const { spawn } = require('child_process');
 const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
@@ -12,22 +13,12 @@ const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 10000;
 const PASSWORD = 'fURIOUS35.2008@#';
 
-// État du live
+let ffmpegProcess = null;
 let lastBitrate = null;
 let isLive = false;
 let liveStartTime = null;
 let restartCount = 0;
 let lastLogs = [];
-
-// Playlist / piste en cours
-let currentTrack = null;
-const totalTracks = 114;
-
-// Statut YouTube (simple ping)
-let youtubeStatus = 'unknown';
-
-// Pour lire ffmpeg.log en continu
-let lastLogSize = 0;
 
 // ---------- Middleware protection ----------
 function authMiddleware(req, res, next) {
@@ -40,9 +31,6 @@ function authMiddleware(req, res, next) {
 
 // ---------- Static files ----------
 app.use('/public', express.static(path.join(__dirname, 'public')));
-
-// ---------- JSON body ----------
-app.use(express.json());
 
 // ---------- Page stats protégée ----------
 app.get('/stats', authMiddleware, (req, res) => {
@@ -65,69 +53,28 @@ app.get('/api/status', authMiddleware, (req, res) => {
     restartCount,
     ramMb,
     cpuLoad: load,
-    logs: lastLogs.slice(-50),
-    currentTrack,
-    totalTracks,
-    youtubeStatus
+    logs: lastLogs.slice(-50)
   });
-});
-
-// ---------- API logs filtrés ----------
-app.get('/api/logs', authMiddleware, (req, res) => {
-  const type = req.query.type || 'all';
-  let filtered = lastLogs;
-
-  if (type === 'error') {
-    filtered = lastLogs.filter(l => l.toLowerCase().includes('error'));
-  } else if (type === 'warn') {
-    filtered = lastLogs.filter(l => l.toLowerCase().includes('warning'));
-  } else if (type === 'ffmpeg') {
-    filtered = lastLogs.filter(l => l.includes('frame=') || l.includes('bitrate='));
-  }
-
-  res.json(filtered.slice(-100));
 });
 
 // ---------- API restart live ----------
 app.post('/api/restart', authMiddleware, (req, res) => {
-  restartCount++;
-  broadcast({ type: 'restart', count: restartCount });
-  res.json({ ok: true });
-});
-
-// ---------- API restart cycle (revient au début logique) ----------
-app.post('/api/restart-cycle', authMiddleware, (req, res) => {
-  restartCount++;
-  currentTrack = null;
-  broadcast({ type: 'restartCycle', count: restartCount });
+  restartLive();
   res.json({ ok: true });
 });
 
 // ---------- API change video ----------
+app.use(express.json());
 app.post('/api/change-video', authMiddleware, (req, res) => {
   const { url } = req.body;
   if (!url) return res.status(400).json({ error: 'Missing url' });
 
   fs.writeFileSync('video_url.txt', url);
-  restartCount++;
-  broadcast({ type: 'restart', count: restartCount });
-
+  restartLive();
   res.json({ ok: true });
 });
 
-// ---------- API mini-player audio (fichier en cours) ----------
-app.get('/api/audio', authMiddleware, (req, res) => {
-  const file = req.query.file || currentTrack;
-  if (!file) return res.status(400).send('No track');
-
-  const audioPath = path.join('/tmp/audio', file);
-  fs.access(audioPath, fs.constants.R_OK, (err) => {
-    if (err) return res.status(404).send('File not found');
-    res.sendFile(audioPath);
-  });
-});
-
-// ---------- WebSocket ----------
+// ---------- WebSocket (logs + stats en temps réel) ----------
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const key = url.searchParams.get('key');
@@ -149,71 +96,43 @@ function broadcast(data) {
   });
 }
 
-// ---------- Lecture en temps réel de ffmpeg.log ----------
-setInterval(() => {
-  fs.stat('ffmpeg.log', (err, stats) => {
-    if (err || !stats) return;
+// ---------- Gestion FFmpeg (logs + bitrate) ----------
+function attachFfmpegLogging(child) {
+  liveStartTime = Date.now();
+  isLive = true;
 
-    if (stats.size > lastLogSize) {
-      const stream = fs.createReadStream('ffmpeg.log', {
-        start: lastLogSize,
-        end: stats.size
-      });
+  child.stderr.on('data', (data) => {
+    const line = data.toString().trim();
+    if (!line) return;
 
-      stream.on('data', (chunk) => {
-        const lines = chunk.toString().split('\n');
+    lastLogs.push(line);
+    if (lastLogs.length > 200) lastLogs.shift();
 
-        lines.forEach(line => {
-          if (!line.trim()) return;
+    broadcast({ type: 'log', line });
 
-          // Ajouter aux logs
-          lastLogs.push(line);
-          if (lastLogs.length > 200) lastLogs.shift();
-
-          // Envoyer au dashboard
-          broadcast({ type: 'log', line });
-
-          // Détection LIVE
-          if (line.includes('frame=') || line.includes('bitrate=')) {
-            if (!isLive) {
-              liveStartTime = Date.now();
-            }
-            isLive = true;
-            broadcast({ type: 'status', live: true });
-          }
-
-          // Extraction du bitrate
-          const matchBitrate = line.match(/bitrate=\s*([0-9.]+)kbits\/s/);
-          if (matchBitrate) {
-            lastBitrate = parseFloat(matchBitrate[1]);
-            broadcast({ type: 'bitrate', value: lastBitrate });
-          }
-
-          // Détection du fichier audio en cours (si ffmpeg logue "Opening '.../NNN.mp3'")
-          const matchFile = line.match(/Opening '.*\/([0-9]{3}\.mp3)'/);
-          if (matchFile) {
-            currentTrack = matchFile[1]; // ex: "045.mp3"
-            broadcast({ type: 'track', file: currentTrack });
-          }
-        });
-      });
-
-      lastLogSize = stats.size;
+    const match = line.match(/bitrate=\s*([0-9.]+)kbits\/s/);
+    if (match) {
+      lastBitrate = parseFloat(match[1]);
+      broadcast({ type: 'bitrate', value: lastBitrate });
     }
   });
-}, 500);
 
-// ---------- Ping simple YouTube pour statut ----------
-setInterval(() => {
-  const req = http.get('http://a.rtmp.youtube.com', (res) => {
-    youtubeStatus = (res.statusCode >= 200 && res.statusCode < 500) ? 'online' : 'unknown';
-    res.resume();
+  child.on('exit', () => {
+    isLive = false;
+    broadcast({ type: 'status', live: false });
   });
+}
 
-  req.on('error', () => {
-    youtubeStatus = 'offline';
-  });
-}, 10000);
+// ---------- Restart live ----------
+function restartLive() {
+  restartCount++;
+  broadcast({ type: 'restart', count: restartCount });
+}
+
+// ---------- IMPORTANT : Mini serveur HTTP pour Render Free ----------
+app.get('/', (req, res) => {
+  res.send('Service en ligne ✔️');
+});
 
 // ---------- Démarrage serveur ----------
 server.listen(PORT, () => {
