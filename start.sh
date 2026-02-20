@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Lancer le serveur HTTP en premier
+# Lancer le serveur HTTP en arrière-plan
 node server.js &
-sleep 3
+sleep 2
 
 # Dossier temporaire pour stocker les audios
 AUDIO_DIR="/tmp/audio"
 mkdir -p "$AUDIO_DIR"
 
-# Télécharger les 114 fichiers audio depuis la Release
+# Télécharger les fichiers audio depuis GitHub Release
 for i in $(seq -f "%03g" 1 114)
 do
     URL="https://github.com/lesptisakhi/live-infinie-coran/releases/download/audio/$i.mp3"
