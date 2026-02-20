@@ -30,7 +30,7 @@ do
 done
 
 IMAGE="image.png"
-OUTPUT="rtmp://a.rtmp.youtube.com/live2/cle"
+OUTPUT="rtmp://a.rtmp.youtube.com/live2/${YT_KEY}"
 
 while true
 do
