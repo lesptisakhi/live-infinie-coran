@@ -12,31 +12,50 @@
       <div class="status-pill" id="status-pill">OFFLINE</div>
     </header>
 
+    <!-- TOP GRID -->
     <section class="top-grid">
+
+      <!-- LIVE STATUS -->
       <div class="card">
         <h2>Live</h2>
         <p><span class="label">Statut :</span> <span id="status-text">OFFLINE</span></p>
         <p><span class="label">Bitrate :</span> <span id="bitrate">N/A</span> kbps</p>
         <p><span class="label">Uptime :</span> <span id="uptime">0 s</span></p>
         <p><span class="label">Redémarrages :</span> <span id="restarts">0</span></p>
+        <p><span class="label">YouTube :</span> <span id="yt-status">unknown</span></p>
       </div>
 
+      <!-- SERVER -->
       <div class="card">
         <h2>Serveur</h2>
         <p><span class="label">RAM :</span> <span id="ram">N/A</span> MB</p>
         <p><span class="label">CPU (1m load) :</span> <span id="cpu">N/A</span></p>
       </div>
 
+      <!-- ACTIONS -->
       <div class="card actions">
         <h2>Actions</h2>
         <button id="btn-restart">Restart Live</button>
+        <button id="btn-restart-cycle" style="background:#dc2626;">Restart Cycle</button>
+
         <div class="change-video">
           <input type="text" id="video-url" placeholder="Nouvelle URL vidéo (mp4, stream...)">
           <button id="btn-change-video">Change Video</button>
         </div>
       </div>
+
     </section>
 
+    <!-- AUDIO NOW PLAYING -->
+    <section class="top-grid">
+      <div class="card">
+        <h2>🎵 Audio en cours</h2>
+        <p id="track">Chargement...</p>
+        <audio id="player" controls style="width:100%; margin-top:10px;"></audio>
+      </div>
+    </section>
+
+    <!-- BITRATE GRAPH -->
     <section class="middle-grid">
       <div class="card graph-card">
         <h2>Bitrate (kbps)</h2>
@@ -44,13 +63,85 @@
       </div>
     </section>
 
+    <!-- LOGS -->
     <section class="bottom-grid">
       <div class="card logs-card">
         <h2>Derniers logs FFmpeg</h2>
         <pre id="logs"></pre>
       </div>
     </section>
+
   </div>
+
+  <script>
+    const key = new URLSearchParams(window.location.search).get("key");
+
+    // UPDATE STATUS
+    function updateStats() {
+      fetch(`/api/status?key=${key}`)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("status-text").textContent = data.live ? "LIVE" : "OFFLINE";
+          document.getElementById("bitrate").textContent = data.bitrate || 0;
+          document.getElementById("uptime").textContent = data.uptime + " s";
+          document.getElementById("restarts").textContent = data.restartCount;
+          document.getElementById("ram").textContent = data.ramMb;
+          document.getElementById("cpu").textContent = data.cpuLoad.toFixed(2);
+          document.getElementById("yt-status").textContent = data.youtubeStatus;
+
+          const pill = document.getElementById("status-pill");
+          if (data.live) {
+            pill.textContent = "LIVE";
+            pill.classList.add("live");
+          } else {
+            pill.textContent = "OFFLINE";
+            pill.classList.remove("live");
+          }
+
+          // TRACK + MINI PLAYER
+          if (data.currentTrack) {
+            document.getElementById("track").textContent =
+              `${data.currentTrack} (${data.currentTrack.replace('.mp3','')}/${data.totalTracks})`;
+
+            document.getElementById("player").src =
+              `/api/audio?file=${data.currentTrack}&key=${key}`;
+          }
+        });
+    }
+
+    // UPDATE LOGS
+    function updateLogs() {
+      fetch(`/api/logs?type=ffmpeg&key=${key}`)
+        .then(res => res.json())
+        .then(lines => {
+          document.getElementById("logs").textContent = lines.join("\n");
+        });
+    }
+
+    // ACTION BUTTONS
+    document.getElementById("btn-restart").onclick = () => {
+      fetch(`/api/restart?key=${key}`, { method: "POST" });
+    };
+
+    document.getElementById("btn-restart-cycle").onclick = () => {
+      fetch(`/api/restart-cycle?key=${key}`, { method: "POST" });
+    };
+
+    document.getElementById("btn-change-video").onclick = () => {
+      const url = document.getElementById("video-url").value;
+      fetch(`/api/change-video?key=${key}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+    };
+
+    // INTERVALS
+    setInterval(updateStats, 2000);
+    setInterval(updateLogs, 2000);
+    updateStats();
+    updateLogs();
+  </script>
 
   <script src="/public/stats.js"></script>
 </body>
