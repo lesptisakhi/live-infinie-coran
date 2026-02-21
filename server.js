@@ -156,7 +156,11 @@ function startFFmpeg() {
   attachFfmpegLogging(ffmpegProcess);
 }
 
-startFFmpeg();
+setTimeout(() => {
+  console.log("⏳ Lancement FFmpeg après délai Render...");
+  startFFmpeg();
+}, 5000);
+
 
 // ---------- Démarrage serveur ----------
 server.listen(PORT, () => {
