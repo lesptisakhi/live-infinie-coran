@@ -142,16 +142,17 @@ function startFFmpeg() {
   const playlistPath = path.join(__dirname, 'playlist.txt');
 
   ffmpegProcess = spawn('ffmpeg', [
-    '-re',
-    '-loop', '1', '-i', 'img.png',
-    '-f', 'concat', '-safe', '0', '-i', playlistPath,
-    '-vf', 'scale=854:480,format=yuv420p',
-    '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'stillimage', '-b:v', '2000k',
-    '-c:a', 'aac', '-b:a', '128k', '-ar', '44100',
-    '-g', '60', '-keyint_min', '60',
-    '-shortest',
-    '-f', 'flv', 'rtmp://a.rtmp.youtube.com/live2/rp4f-a4rp-adz9-hk5d-5fd4'
-  ]);
+  '-re',
+  '-loop', '1', '-i', 'img.png',
+  '-f', 'concat', '-safe', '0', '-i', playlistPath,
+  '-vf', 'scale=426:240,format=yuv420p',
+  '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'stillimage', '-b:v', '300k',
+  '-c:a', 'aac', '-b:a', '64k', '-ar', '44100',
+  '-g', '60', '-keyint_min', '60',
+  '-shortest',
+  '-f', 'flv', 'rtmp://a.rtmp.youtube.com/live2/rp4f-a4rp-adz9-hk5d-5fd4'
+]);
+
 
   attachFfmpegLogging(ffmpegProcess);
 }
