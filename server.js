@@ -10,7 +10,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 8080;
 const PASSWORD = 'fURIOUS35.2008@#';
 
 let ffmpegProcess = null;
