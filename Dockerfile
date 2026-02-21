@@ -1,10 +1,20 @@
-FROM debian:stable
+FROM node:18
 
-RUN apt update && apt install -y ffmpeg curl nodejs npm
+# Installer FFmpeg
+RUN apt-get update && apt-get install -y ffmpeg
 
+# Créer le dossier app
 WORKDIR /app
+
+# Copier les fichiers
+COPY package*.json ./
+RUN npm install
+
 COPY . .
 
-RUN chmod +x start.sh
+# Exposer le port Fly.io
+ENV PORT=8080
+EXPOSE 8080
 
-CMD ["bash", "start.sh"]
+# Lancer ton serveur
+CMD ["node", "server.js"]
