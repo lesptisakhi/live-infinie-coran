@@ -29,7 +29,7 @@ do
     echo "file '$AUDIO_DIR/$i.mp3'" >> "$PLAYLIST"
 done
 
-IMAGE="image.png"
+IMAGE="img.png"
 OUTPUT="rtmp://a.rtmp.youtube.com/live2/rp4f-a4rp-adz9-hk5d-5fd4"
 
 while true
